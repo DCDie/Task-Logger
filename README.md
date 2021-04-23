@@ -14,4 +14,4 @@
 14. Add email notification then task is assigned to me
 15. Add email notification then my task in commented
 16. Add email notification then commented task is completed
-17. Search task by title - user send search term and receive list of tasks that match
+~~17. Search task by title - user send search term and receive list of tasks that match~~
