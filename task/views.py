@@ -11,3 +11,15 @@ from task.serializers import TaskSerializer
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
+
+
+class DoneListView(GenericAPIView):
+    serializer_class = TaskSerializer
+
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def get(self, request):
+        blogs = Task.objects.filter(status='True')
+
+        return Response(TaskSerializer(blogs, many=True).data)
