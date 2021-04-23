@@ -1,8 +1,8 @@
-1. Register - user send first name, last name, email, password and receive JWT token for authentication
+~~1. Register - user send first name, last name, email, password and receive JWT token for authentication~~
 2. Login - user send email, password and receive JWT token for authentication
 3. Get list of users - user receive a list with id and full name of all users from application
-4. Create a task - user send title, description and receive new task id, the new task is assigned to current user
-5. View list of tasks - user receive a list with id and title of all created tasks from application
+~~4. Create a task - user send title, description and receive new task id, the new task is assigned to current user~~
+~~5. View list of tasks - user receive a list with id and title of all created tasks from application~~
 6. View task details by id - user send task_id and receive task details: id, title, description, status, owner
 7. View my tasks - user receive a list with id and title of tasks assigned to him
 8. View Completed tasks - user receive a list with id and title of tasks with status completed
