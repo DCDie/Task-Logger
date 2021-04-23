@@ -23,3 +23,16 @@ class DoneListView(GenericAPIView):
         blogs = Task.objects.filter(status='True')
 
         return Response(TaskSerializer(blogs, many=True).data)
+
+class TitleListView(GenericAPIView):
+    serializer_class = TaskSerializer
+
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def get(self, request, pk):
+        tit = get_object_or_404(Task.objects.filter(title=pk))
+
+        return Response(TaskSerializer(tit).data)
+
+
