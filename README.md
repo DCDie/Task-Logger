@@ -1,4 +1,4 @@
-1. Register - user send first name, last name, email, password and receive JWT token for authentication
+~~1. Register - user send first name, last name, email, password and receive JWT token for authentication~~
 
 2. Login - user send email, password and receive JWT token for authentication
 
