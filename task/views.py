@@ -3,6 +3,8 @@ from rest_framework import viewsets
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from django.core.mail import send_mail
+from django.contrib.auth.models import User
 
 from task.models import Task, Comment
 from task.serializers import TaskSerializer, CommentSerializer
@@ -44,7 +46,7 @@ class CommentsListView(GenericAPIView):
     authentication_classes = ()
 
     def get(self, request, pk):
-        com = Comment.objects.filter(sl=pk)
+        com = Comment.objects.filter(taskid=pk)
 
         return Response(CommentSerializer(com, many=True).data)
 
@@ -61,3 +63,32 @@ class TaskMakeDone(GenericAPIView):
         task.save()
         serializer = TaskSerializer(task)
         return Response(serializer.data)
+
+
+class MyTask(GenericAPIView):
+    serializer_class = TaskSerializer
+
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def get(self, request, pk):
+        author = Task.objects.filter(worker=pk)
+        return Response(TaskSerializer(author, many=True).data)
+
+
+class AddComment(GenericAPIView):
+    serializer_class = CommentSerializer
+
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        comment = Comment.objects.create(
+            **serializer.validated_data,
+        )
+        comment.save()
+
+        return Response(CommentSerializer(comment).data)
