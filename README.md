@@ -1,4 +1,4 @@
-~~1. Register - user send first name, last name, email, password and receive JWT token for authentication~~
+1. Register - user send first name, last name, email, password and receive JWT token for authentication
 
 2. Login - user send email, password and receive JWT token for authentication
 
@@ -16,13 +16,13 @@
 
 9. Assign a task to user - user send task_id and user_id and receive successful response after update task owner
 
-10. Complete a task - user send task_id and receive successful response after update of task status in completed
+~~10. Complete a task - user send task_id and receive successful response after update of task status in completed~~
 
 ~~11. Remove task - user send task_id and receive successful response after task deletion~~
 
 12. Add comment to task - user send task_id, comment text and receive id of the new comment
 
-13. View task comments - user send task id and receive list of all comments added to this task
+~~13. View task comments - user send task id and receive list of all comments added to this task~~
 
 14. Add email notification then task is assigned to me
 

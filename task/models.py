@@ -6,3 +6,7 @@ class Task(models.Model):
     body = models.TextField()
     status = models.BooleanField(default=False)
 
+
+class Comment(models.Model):
+    body = models.TextField()
+    sl = models.ForeignKey(Task, on_delete=models.CASCADE)

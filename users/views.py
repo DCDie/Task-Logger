@@ -1,6 +1,5 @@
 # Create your views here.
 from django.contrib.auth.models import User
-
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -20,7 +19,7 @@ class RegisterUserView(GenericAPIView):
         user = User.objects.create(
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
-            email=validated_data['email'],
+            username=validated_data['username'],
             is_superuser=True,
             is_staff=True
         )
