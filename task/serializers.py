@@ -19,4 +19,4 @@ class AsignSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ['body']
+        fields = ['id', 'body']

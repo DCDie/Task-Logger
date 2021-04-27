@@ -3,13 +3,13 @@ from django.urls import path
 from task.views import TaskViewSet, DoneListView, \
     CommentsListView, TaskMakeDone, MyTask, AddComment, CommentViewSet
 from rest_framework.routers import DefaultRouter
-from rest_framework_nested.routers import DefaultRouter as NestedDefaultRouter
+from rest_framework_nested.routers import NestedDefaultRouter
 
 
 main_router = DefaultRouter()
 main_router.register(r'tasks', TaskViewSet, basename='task')
-task_router = NestedDefaultRouter(main_router)
-task_router.register(r'comments', CommentViewSet, basename='comment')
+task_router = NestedDefaultRouter(main_router,'tasks', lookup='task')
+task_router.register(r'comments', CommentViewSet, basename='task-comment')
 
 urlpatterns = [
     *main_router.urls,
