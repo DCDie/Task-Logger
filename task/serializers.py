@@ -10,6 +10,12 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AsignSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ['id', 'worker']
+
+
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment

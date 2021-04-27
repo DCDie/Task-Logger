@@ -1,6 +1,7 @@
 from django.urls import path
 
-from task.views import TaskViewSet, DoneListView, TitleListView, CommentsListView, TaskMakeDone, MyTask, AddComment
+from task.views import TaskViewSet, DoneListView, TitleListView, \
+    CommentsListView, TaskMakeDone, MyTask, AddComment
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()

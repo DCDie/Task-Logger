@@ -1,6 +1,6 @@
-1. Register - user send first name, last name, email, password and receive JWT token for authentication
+~~1. Register - user send first name, last name, email, password and receive JWT token for authentication~~
 
-2. Login - user send email, password and receive JWT token for authentication
+~~2. Login - user send email, password and receive JWT token for authentication~~
 
 ~~3. Get list of users - user receive a list with id and full name of all users from application~~
 
@@ -24,7 +24,7 @@
 
 ~~13. View task comments - user send task id and receive list of all comments added to this task~~
 
-14. Add email notification then task is assigned to me
+~~14. Add email notification then task is assigned to me~~
 
 15. Add email notification then my task in commented
 

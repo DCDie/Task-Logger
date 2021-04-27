@@ -1,18 +1,37 @@
 from django.shortcuts import render
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from rest_framework.filters import SearchFilter
 from django.core.mail import send_mail
-from django.contrib.auth.models import User
-
 from task.models import Task, Comment
-from task.serializers import TaskSerializer, CommentSerializer
+from task.serializers import TaskSerializer, CommentSerializer, AsignSerializer
 
 
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
+    filter_backends = [SearchFilter]
+    search_fields = ['title']
+
+    @action(methods=['patch'], detail=True, url_path='assign', serializer_class=AsignSerializer)
+    def task_assign(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        instance: Task = self.get_object()
+        instance.worker = serializer.validated_data['worker']
+        instance.save()
+
+        instance.worker.email_user('You have a new task!',
+                                   'Complite the task!',
+                                   'danielcuznetov04@gmail.com',
+                                   fail_silently=False, )
+
+        response_serializer = TaskSerializer(instance)
+        return Response(response_serializer.data)
 
 
 class DoneListView(GenericAPIView):
