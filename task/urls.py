@@ -1,17 +1,20 @@
 from django.urls import path
 
-from task.views import TaskViewSet, DoneListView, TitleListView, \
-    CommentsListView, TaskMakeDone, MyTask, AddComment
+from task.views import TaskViewSet, DoneListView, \
+    CommentsListView, TaskMakeDone, MyTask, AddComment, CommentViewSet
 from rest_framework.routers import DefaultRouter
+from rest_framework_nested.routers import DefaultRouter as NestedDefaultRouter
 
-router = DefaultRouter()
-router.register(r'tasks', TaskViewSet, basename='task')
 
-urlpatterns = router.urls
+main_router = DefaultRouter()
+main_router.register(r'tasks', TaskViewSet, basename='task')
+task_router = NestedDefaultRouter(main_router)
+task_router.register(r'comments', CommentViewSet, basename='comment')
 
-urlpatterns += [
+urlpatterns = [
+    *main_router.urls,
+    *task_router.urls,
     path('done/', DoneListView.as_view(), name='done_list'),
-    path('title/<slug:pk>/', TitleListView.as_view(), name='task_item'),
     path('comments/<int:pk>/', CommentsListView.as_view(), name='comments_item'),
     path('makedone/<int:pk>/', TaskMakeDone.as_view(), name='taskdone__item'),
     path('mytask/<int:pk>/', MyTask.as_view(), name='mytask_item'),
