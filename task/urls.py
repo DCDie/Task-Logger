@@ -1,6 +1,6 @@
 from django.urls import path
 
-from task.views import TaskViewSet, DoneListView, AddComment, CommentViewSet
+from task.views import TaskViewSet, DoneListView, CommentViewSet
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedDefaultRouter
 
@@ -14,5 +14,4 @@ urlpatterns = [
     *main_router.urls,
     *task_router.urls,
     path('done/', DoneListView.as_view(), name='done_list'),
-    path('addcomment/', AddComment.as_view(), name='addcomment_item'),
 ]

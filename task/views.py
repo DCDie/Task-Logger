@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.filters import SearchFilter
 from django.core.mail import send_mail
+from django.contrib.auth.models import User
 from rest_framework_nested.viewsets import NestedViewSetMixin
 
 from task.models import Task, Comment
@@ -15,11 +16,12 @@ from task.serializers import TaskSerializer, CommentSerializer, AsignTaskSeriali
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
+    permission_classes = [IsAuthenticated]
     filter_backends = [SearchFilter]
     search_fields = ['title']
 
-    #def get_queryset(self):
-        #return super(TaskViewSet, self).get_queryset().filter(worker=self.request.user)
+    # def get_queryset(self):
+    # return super(TaskViewSet, self).get_queryset().filter(worker=self.request.user)
 
     @action(methods=['patch'], detail=True, url_path='assign', serializer_class=AsignTaskSerializer)
     def task_assign(self, request, *args, **kwargs):
@@ -47,10 +49,14 @@ class TaskViewSet(viewsets.ModelViewSet):
         instance.status = serializer.validated_data['status']
         instance.save()
 
-        instance.worker.email_user('You have a new task!',
-                                   'Complete the task!',
-                                   'danielcuznetov04@gmail.com',
-                                   fail_silently=False, )
+        user_ids = instance.comment_set.values_list('author', flat=True).distinct()
+        users = User.objects.filter(id__in=user_ids)
+
+        for user in users:
+            user.email_user('Task that you commented was completed!',
+                            'Task was completed!',
+                            'danielcuznetov04@gmail.com',
+                            fail_silently=False, )
 
         response_serializer = TaskSerializer(instance)
         return Response(response_serializer.data)
@@ -78,6 +84,12 @@ class CommentViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
         serializer: CommentSerializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
+
+        serializer.instance.task.worker.email_user('Your task has been commented',
+                                                   'Read the comment!',
+                                                   'danielcuznetov04@gmail.com',
+                                                   fail_silently=False, )
+
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
@@ -88,13 +100,14 @@ class DoneListView(GenericAPIView):
     permission_classes = (AllowAny,)
     authentication_classes = ()
 
+    @action(methods=['get'], detail=True, url_path='done_tasks', serializer_class=TaskSerializer)
     def get(self, request):
         done = Task.objects.filter(status='True')
 
         return Response(TaskSerializer(done, many=True).data)
 
 
-class AddComment(GenericAPIView):
+"""class AddComment(GenericAPIView):
     serializer_class = CommentSerializer
 
     permission_classes = (AllowAny,)
@@ -109,4 +122,4 @@ class AddComment(GenericAPIView):
         )
         comment.save()
 
-        return Response(CommentSerializer(comment).data)
+        return Response(CommentSerializer(comment).data)"""
