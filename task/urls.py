@@ -1,5 +1,3 @@
-from django.urls import path
-
 from task.views import TaskViewSet, CommentViewSet
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedDefaultRouter
