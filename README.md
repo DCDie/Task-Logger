@@ -12,7 +12,7 @@
 
 ~~7. View my tasks - user receive a list with id and title of tasks assigned to him~~
 
-~~8. View Completed tasks - user receive a list with id and title of tasks with status completed~~
+8. View Completed tasks - user receive a list with id and title of tasks with status completed
 
 ~~9. Assign a task to user - user send task_id and user_id and receive successful response after update task owner~~
 

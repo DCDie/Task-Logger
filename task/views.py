@@ -1,13 +1,15 @@
 from django.shortcuts import render
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.filters import SearchFilter
 from django.core.mail import send_mail
+from rest_framework_nested.viewsets import NestedViewSetMixin
+
 from task.models import Task, Comment
-from task.serializers import TaskSerializer, CommentSerializer, AsignSerializer
+from task.serializers import TaskSerializer, CommentSerializer, AsignTaskSerializer, TaskStatusSerializer
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -16,7 +18,10 @@ class TaskViewSet(viewsets.ModelViewSet):
     filter_backends = [SearchFilter]
     search_fields = ['title']
 
-    @action(methods=['patch'], detail=True, url_path='assign', serializer_class=AsignSerializer)
+    #def get_queryset(self):
+        #return super(TaskViewSet, self).get_queryset().filter(worker=self.request.user)
+
+    @action(methods=['patch'], detail=True, url_path='assign', serializer_class=AsignTaskSerializer)
     def task_assign(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -33,28 +38,48 @@ class TaskViewSet(viewsets.ModelViewSet):
         response_serializer = TaskSerializer(instance)
         return Response(response_serializer.data)
 
-
-class CommentViewSet(viewsets.ModelViewSet):
-    serializer_class = CommentSerializer
-    queryset = Comment.objects.all()
-
-    @action(methods=['get'], detail=True, url_path='get_comments', serializer_class=CommentSerializer)
-    def comment_get(self, request, pk):
-        com = Comment.objects.filter(taskid=pk)
-
-        return Response(CommentSerializer(com, many=True).data)
-
-    @action(methods=['post'], detail=True, url_path='add_comment', serializer_class=CommentSerializer)
-    def task_assign(self, request, *args, **kwargs):
+    @action(methods=['patch'], detail=True, url_path='complete', serializer_class=TaskStatusSerializer)
+    def task_complete(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         instance: Task = self.get_object()
-        instance.body = serializer.validated_data['body']
+        instance.status = serializer.validated_data['status']
         instance.save()
+
+        instance.worker.email_user('You have a new task!',
+                                   'Complete the task!',
+                                   'danielcuznetov04@gmail.com',
+                                   fail_silently=False, )
 
         response_serializer = TaskSerializer(instance)
         return Response(response_serializer.data)
+
+    @action(methods=['get'], detail=True, url_path='mytask', serializer_class=TaskSerializer)
+    def my_task(self, request, pk):
+        author = Task.objects.filter(worker=pk)
+        return Response(TaskSerializer(author, many=True).data)
+
+
+class CommentViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    queryset = Comment.objects.all()
+    permission_classes = [IsAuthenticated]
+    parent_lookup_kwargs = {
+        'task_pk': 'task__pk'
+    }
+
+    def perform_create(self, serializer):
+        task = get_object_or_404(Task, id=self.kwargs.get('task_pk'))
+        author = self.request.user
+        serializer.save(task=task, author=author)
+
+    def create(self, request, *args, **kwargs):
+        serializer: CommentSerializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class DoneListView(GenericAPIView):
@@ -64,46 +89,9 @@ class DoneListView(GenericAPIView):
     authentication_classes = ()
 
     def get(self, request):
-        blogs = Task.objects.filter(status='True')
+        done = Task.objects.filter(status='True')
 
-        return Response(TaskSerializer(blogs, many=True).data)
-
-
-class CommentsListView(GenericAPIView):
-    serializer_class = CommentSerializer
-
-    permission_classes = (AllowAny,)
-    authentication_classes = ()
-
-    def get(self, request, pk):
-        com = Comment.objects.filter(taskid=pk)
-
-        return Response(CommentSerializer(com, many=True).data)
-
-
-class TaskMakeDone(GenericAPIView):
-    serializer_class = TaskSerializer
-
-    permission_classes = (AllowAny,)
-    authentication_classes = ()
-
-    def get(self, request, pk):
-        task = get_object_or_404(Task, pk=pk)
-        task.status = True
-        task.save()
-        serializer = TaskSerializer(task)
-        return Response(serializer.data)
-
-
-class MyTask(GenericAPIView):
-    serializer_class = TaskSerializer
-
-    permission_classes = (AllowAny,)
-    authentication_classes = ()
-
-    def get(self, request, pk):
-        author = Task.objects.filter(worker=pk)
-        return Response(TaskSerializer(author, many=True).data)
+        return Response(TaskSerializer(done, many=True).data)
 
 
 class AddComment(GenericAPIView):

@@ -10,13 +10,23 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class AsignSerializer(serializers.ModelSerializer):
+class AsignTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = ['id', 'worker']
+        fields = ['worker']
+
+
+class TaskStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ['status']
 
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ['body']
+        fields = '__all__'
+        extra_kwargs = {
+            'author': {'read_only': True},
+            'task': {'read_only': True}
+        }
