@@ -61,6 +61,19 @@ class TaskViewSet(viewsets.ModelViewSet):
         response_serializer = TaskSerializer(instance)
         return Response(response_serializer.data)
 
+    @action(methods=['get'], detail=False, url_path='done_tasks', serializer_class=TaskSerializer)
+    def get_done_tasks(self, request):
+        done = Task.objects.filter(status='True')
+
+        return Response(TaskSerializer(done, many=True).data)
+
+    @action(methods=['get'], detail=False, url_path='my_tasks', serializer_class=TaskSerializer)
+    def get_my_tasks(self, request):
+        author = self.request.user
+        my_task = Task.objects.filter(worker=author)
+
+        return Response(TaskSerializer(my_task, many=True).data)
+
 
 class CommentViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
     serializer_class = CommentSerializer
@@ -88,27 +101,3 @@ class CommentViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-
-class DoneListView(GenericAPIView):
-    serializer_class = TaskSerializer
-
-    permission_classes = [IsAuthenticated]
-
-    @action(methods=['get'], detail=True, url_path='done_tasks', serializer_class=TaskSerializer)
-    def get(self, request):
-        done = Task.objects.filter(status='True')
-
-        return Response(TaskSerializer(done, many=True).data)
-
-
-class MyTaskListView(GenericAPIView):
-    serializer_class = TaskSerializer
-
-    permission_classes = [IsAuthenticated]
-
-    @action(methods=['get'], detail=True, url_path='my_tasks', serializer_class=TaskSerializer)
-    def get(self, request):
-        author = self.request.user
-        my_task = Task.objects.filter(worker=author)
-
-        return Response(TaskSerializer(my_task, many=True).data)
