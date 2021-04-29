@@ -10,10 +10,11 @@ from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from rest_framework_nested.viewsets import NestedViewSetMixin
 from datetime import datetime
+from django.db.models import Avg, Count, Min, Sum
 
 from task.models import Task, Comment, TaskTimer
 from task.serializers import TaskSerializer, CommentSerializer, AsignTaskSerializer, TaskStatusSerializer, \
-    TimerSerializer
+    TimerSerializer, TimerAddSerializer
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -96,6 +97,41 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         return Response(TimerSerializer(instance).data)
 
+    @action(methods=['post'], detail=True, url_path='log_time', serializer_class=TimerAddSerializer)
+    def log_timer(self, request, pk):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        instance = TaskTimer.objects.create(
+            task_id=pk,
+            author=self.request.user,
+            stop_time=serializer.validated_data['stop_time'],
+            time_final=serializer.validated_data['time_final'] * 60,
+        )
+
+        instance.start_time = instance.stop_time - instance.time_final
+        instance.save()
+
+        return Response(TimerAddSerializer(instance).data)
+
+    @action(methods=['get'], detail=True, url_path='tasks_logs', serializer_class=TimerSerializer)
+    def tasks_logs(self, request, pk):
+        log_time = TaskTimer.objects.filter(task=pk)
+
+        return Response(TimerSerializer(log_time, many=True).data)
+
+    @action(methods=['get'], detail=True, url_path='sum_time', serializer_class=TimerSerializer)
+    def sum_time(self, request, pk):
+        sum_time = TaskTimer.objects.filter(task=pk).aggregate(Sum('time_final'))
+
+        return Response(sum_time)
+
+    @action(methods=['get'], detail=False, url_path='month_time', serializer_class=TimerSerializer)
+    def month_time(self, request):
+        month_time_sum = TaskTimer.objects.filter(author=self.request.user).aggregate(Sum('time_final'))
+
+        return Response(month_time_sum)
+
 
 class CommentViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
     serializer_class = CommentSerializer
@@ -122,12 +158,3 @@ class CommentViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-
-"""class TimerViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
-    serializer_class = TimerSerializer
-    queryset = TaskTimer.objects.all()
-    permission_classes = [IsAuthenticated]
-    parent_lookup_kwargs = {
-        'task_pk': 'task__pk'
-    }"""

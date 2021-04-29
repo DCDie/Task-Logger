@@ -28,6 +28,12 @@ class TimerSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class TimerAddSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskTimer
+        fields = ['stop_time', 'time_final']
+
+
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
