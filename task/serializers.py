@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from task.models import Task, Comment
+from task.models import Task, Comment, TaskTimer
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -20,6 +20,12 @@ class TaskStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ['status']
+
+
+class TimerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskTimer
+        fields = '__all__'
 
 
 class CommentSerializer(serializers.ModelSerializer):
