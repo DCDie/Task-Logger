@@ -1,10 +1,10 @@
-from django.contrib.auth.models import User
 from rest_framework import serializers
-
 from task.models import Task, Comment, TaskTimer
 
 
 class TaskSerializer(serializers.ModelSerializer):
+    total_time = serializers.DurationField(read_only=True)
+
     class Meta:
         model = Task
         fields = '__all__'
@@ -42,3 +42,4 @@ class CommentSerializer(serializers.ModelSerializer):
             'author': {'read_only': True},
             'task': {'read_only': True}
         }
+
