@@ -1,6 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.contrib import django_filters
 from rest_framework import viewsets, status
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -22,6 +23,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
     permission_classes = [IsAuthenticated]
+    #authentication_classes = [TokenAuthentication]
     filter_backends = [SearchFilter]
     search_fields = ['title']
 
@@ -171,15 +173,4 @@ class TaskTimerViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
         sum_time = TaskTimer.objects.filter(task=task_pk).aggregate(Sum('time_final'))
         suma = sum_time['time_final__sum'] / 60
         return Response(suma)
-
-    @action(methods=['get'], detail=False, url_path='top_20', serializer_class=TimerSerializer,
-            filterset_class=TaskTimerFilterSet)
-    def top_20(self, request):
-        start_date = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        end_date = timezone.now()
-
-        top = TaskTimer.objects.filter(stop_time__range=[start_date, end_date]).order_by('-time_final')[:20]
-
-        return Response(TimerSerializer(top, many=True).data)
-
 

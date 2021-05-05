@@ -42,9 +42,9 @@ class UserList(viewsets.ModelViewSet):
         start_date = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         end_date = timezone.now()
         prev_month = TaskTimer.objects.filter(stop_time__range=[start_date, end_date], author=self.request.user).aggregate(Sum('time_final'))
-        suma = prev_month['time_final__sum'] / 60
+        sum_time = prev_month['time_final__sum'] / 60
 
-        return Response(suma)
+        return Response(sum_time)
 
     @action(methods=['get'], detail=False, url_path='top', serializer_class=TaskSerializer)
     def top(self, request):

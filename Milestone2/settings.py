@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-c=5%i2sbd2y!a^0cb40mqu)8!x)=u+g2d#&k*^&&^32v$7wdy@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 # Application definition
 
@@ -41,6 +41,16 @@ INSTALLED_APPS = [
     'django_filters',
     'users',
     'task',
+    'django_nose',
+    'rest_framework.authtoken',
+]
+
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+
+NOSE_ARGS = [
+    '--with-coverage',
+    '--cover-package=task,users',
+    '--cover-html',
 ]
 
 MIDDLEWARE = [
