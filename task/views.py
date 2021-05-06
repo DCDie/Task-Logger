@@ -1,9 +1,17 @@
+import os
+import random
+import string
+import uuid
+from datetime import timedelta
+
+from django.core.paginator import Paginator
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.contrib import django_filters
 from rest_framework import viewsets, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.filters import SearchFilter
@@ -15,6 +23,7 @@ from django.db.models import Sum
 
 from task.filtersets import TaskTimerFilterSet
 from task.models import Task, Comment, TaskTimer
+from task.pagination import TaskPagination
 from task.serializers import TaskSerializer, CommentSerializer, AsignTaskSerializer, TaskStatusSerializer, \
     TimerSerializer, TimerAddSerializer
 
@@ -23,7 +32,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
     permission_classes = [IsAuthenticated]
-    #authentication_classes = [TokenAuthentication]
+    pagination_class = TaskPagination
     filter_backends = [SearchFilter]
     search_fields = ['title']
 
@@ -88,6 +97,37 @@ class TaskViewSet(viewsets.ModelViewSet):
         my_task = Task.objects.filter(worker=author)
 
         return Response(TaskSerializer(my_task, many=True).data)
+
+    @action(methods=['post'], detail=False, url_path='add_25000_tasks', serializer_class=TaskSerializer)
+    def crate_tasks(self, request):
+        i: int = 1
+        mylist = [False, True]
+        for i in range(25000):
+            new_task = Task.objects.create(
+                title=uuid.uuid4(),
+                body=uuid.uuid4(),
+                status=random.choice(mylist),
+                worker_id=random.randint(1, 3)
+            )
+            new_task.save()
+
+        return (new_task)
+
+    @action(methods=['post'], detail=False, url_path='add_50000_logs', serializer_class=TimerSerializer)
+    def crate_logs(self, request):
+        i: int = 0
+        for i in range(50000):
+            new_log = TaskTimer.objects.create(
+                task_id=random.randint(1, 25000),
+                author_id=random.randint(1, 3),
+                stop_time=timezone.now(),
+                time_final=timedelta(seconds=random.randint(60, 3600)),
+
+            )
+            new_log.start_time = new_log.stop_time - new_log.time_final
+            new_log.save()
+
+        return (new_log)
 
 
 class CommentViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
@@ -162,6 +202,8 @@ class TaskTimerViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
         instance.save()
 
         return Response(TimerAddSerializer(instance).data)
+
+
 
     @action(methods=['get'], detail=False, url_path='tasks_logs', serializer_class=TimerSerializer)
     def tasks_logs(self, request, task_pk):
