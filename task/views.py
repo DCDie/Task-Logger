@@ -98,7 +98,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         return Response(TaskSerializer(my_task, many=True).data)
 
-    @action(methods=['post'], detail=False, url_path='add_25000_tasks', serializer_class=TaskSerializer)
+    """@action(methods=['post'], detail=False, url_path='add_25000_tasks', serializer_class=TaskSerializer)
     def crate_tasks(self, request):
         i: int = 1
         mylist = [False, True]
@@ -127,7 +127,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             new_log.start_time = new_log.stop_time - new_log.time_final
             new_log.save()
 
-        return (new_log)
+        return (new_log)"""
 
 
 class CommentViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
