@@ -27,3 +27,5 @@ six==1.15.0
 sqlparse==0.4.1
 typing==3.7.4.3
 uritemplate==3.0.1
+flask
+redis

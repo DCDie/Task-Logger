@@ -107,7 +107,8 @@ EMAIL_HOST_PASSWORD = '060305082da'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'task',
+        'NAME': 'postgres',
+        'POOL': '5',
         'USER': 'postgres',
         'PASSWORD': 'admin',
         'HOST': 'localhost',
