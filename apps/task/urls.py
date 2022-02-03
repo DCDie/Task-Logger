@@ -1,7 +1,7 @@
-from task.views import TaskViewSet, CommentViewSet, TaskTimerViewSet
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedDefaultRouter
 
+from apps.task.views import TaskViewSet, CommentViewSet, TaskTimerViewSet
 
 main_router = DefaultRouter()
 main_router.register(r'tasks', TaskViewSet, basename='task')

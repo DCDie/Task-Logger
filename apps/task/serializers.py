@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from task.models import Task, Comment, TaskTimer
+from apps.task.models import Task, Comment, TaskTimer
 
 
 class TaskSerializer(serializers.ModelSerializer):

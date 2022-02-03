@@ -1,31 +1,24 @@
-import os
 import random
-import string
 import uuid
 from datetime import timedelta
 
-from django.core.paginator import Paginator
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.contrib import django_filters
 from rest_framework import viewsets, status
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.filters import SearchFilter
-from django_filters import rest_framework as filters
 from django.contrib.auth.models import User
 from rest_framework_nested.viewsets import NestedViewSetMixin
 from django.utils import timezone
 from django.db.models import Sum
 
-from task.filtersets import TaskTimerFilterSet
-from task.models import Task, Comment, TaskTimer
-from task.pagination import TaskPagination
-from task.serializers import TaskSerializer, CommentSerializer, AsignTaskSerializer, TaskStatusSerializer, \
-    TimerSerializer, TimerAddSerializer
+from apps.task.filtersets import TaskTimerFilterSet
+from apps.task.models import Task, Comment, TaskTimer
+from apps.task.pagination import TaskPagination
+from apps.task.serializers import (
+    TaskSerializer, CommentSerializer, AsignTaskSerializer, TaskStatusSerializer, TimerSerializer, TimerAddSerializer)
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -203,8 +196,6 @@ class TaskTimerViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
 
         return Response(TimerAddSerializer(instance).data)
 
-
-
     @action(methods=['get'], detail=False, url_path='tasks_logs', serializer_class=TimerSerializer)
     def tasks_logs(self, request, task_pk):
         queryset = self.filter_queryset(TaskTimer.objects.filter(task=task_pk))
@@ -215,4 +206,3 @@ class TaskTimerViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
         sum_time = TaskTimer.objects.filter(task=task_pk).aggregate(Sum('time_final'))
         suma = sum_time['time_final__sum'] / 60
         return Response(suma)
-

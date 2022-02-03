@@ -4,7 +4,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
-from task.models import Task, TaskTimer
+from apps.task.models import Task, TaskTimer
 
 
 class TaskTestCase(TestCase):

@@ -1,13 +1,8 @@
 from django.urls import path
-from django.contrib.auth.models import User
-from users.views import RegisterUserView, UserList
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import (TokenObtainPairView, TokenRefreshView, TokenVerifyView, )
 
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-    TokenVerifyView,
-)
+from apps.users.views import RegisterUserView, UserList
 
 router = DefaultRouter()
 router.register(r'users', UserList, basename='user')
