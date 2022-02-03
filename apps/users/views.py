@@ -30,6 +30,10 @@ class RegisterUserView(CreateAPIView):
 class UserList(viewsets.ModelViewSet):
     serializer_class = ListUserSerializer
     queryset = User.objects.all()
+    filter_fields = ('is_active', 'is_staff', 'is_superuser')
+    ordering_fields = ('id', 'username', 'first_name', 'last_name', 'last_login', 'date_joined')
+    search_fields = ('username', 'first_name', 'last_name')
+    ordering = ('-id',)
 
     @action(methods=['get'], detail=False, url_path='month_time', serializer_class=TimerSerializer)
     def month_time(self, request):
