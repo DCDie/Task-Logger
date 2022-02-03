@@ -3,7 +3,7 @@ from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.contrib.auth.models import User
 
@@ -28,6 +28,7 @@ class RegisterUserView(CreateAPIView):
 
 
 class UserList(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     serializer_class = ListUserSerializer
     queryset = User.objects.all()
     filter_fields = ('is_active', 'is_staff', 'is_superuser')

@@ -14,82 +14,62 @@ from rest_framework_nested.viewsets import NestedViewSetMixin
 from django.utils import timezone
 from django.db.models import Sum
 
-from apps.task.filtersets import TaskTimerFilterSet
 from apps.task.models import Task, Comment, TaskTimer
-from apps.task.pagination import TaskPagination
 from apps.task.serializers import (
-    TaskSerializer, CommentSerializer, AsignTaskSerializer, TaskStatusSerializer, TimerSerializer, TimerAddSerializer)
+    TaskSerializer, CommentSerializer, AssignTaskSerializer, TaskStatusSerializer, TimerSerializer, TimerAddSerializer,
+    TaskListSerializer)
 
 
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
-    queryset = Task.objects.all()
+    queryset = Task.objects.all().select_related('worker')
     permission_classes = [IsAuthenticated]
-    pagination_class = TaskPagination
-    filter_backends = [SearchFilter]
-    search_fields = ['title']
+    search_fields = ['title', 'body']
+    filter_fields = ['done', 'worker']
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return TaskListSerializer
+        return self.serializer_class
 
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    @action(methods=['patch'], detail=True, url_path='assign', serializer_class=AsignTaskSerializer)
+    @action(methods=['patch'], detail=True, url_path='assign', serializer_class=AssignTaskSerializer)
     def task_assign(self, request, *args, **kwargs):
+        instance = self.get_object()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        instance: Task = self.get_object()
-        instance.worker = serializer.validated_data['worker']
-        instance.save()
-
-        instance.worker.email_user('You have a new task!',
-                                   'Complite the task!',
-                                   'danielcuznetov04@gmail.com',
+        serializer.update(instance, serializer.validated_data)
+        instance.worker.email_user(subject=instance.title,
+                                   message=instance.body,
+                                   from_email='danielcuznetov04@gmail.com',
                                    fail_silently=False, )
-
-        response_serializer = TaskSerializer(instance)
-        return Response(response_serializer.data)
+        return Response(TaskSerializer(instance).data)
 
     @action(methods=['patch'], detail=True, url_path='complete', serializer_class=TaskStatusSerializer)
     def task_complete(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        instance: Task = self.get_object()
-        instance.status = serializer.validated_data['status']
+        instance = self.get_object()
+        instance.done = True
+        instance.done_date = timezone.now()
         instance.save()
 
         user_ids = instance.comment_set.values_list('author', flat=True).distinct()
         users = User.objects.filter(id__in=user_ids)
-
         for user in users:
-            user.email_user('Task that you commented was completed!',
-                            'Task was completed!',
-                            'danielcuznetov04@gmail.com',
+            user.email_user(subject='Task that you commented was completed!',
+                            message=instance.name,
+                            from_email='danielcuznetov04@gmail.com',
                             fail_silently=False, )
 
-        response_serializer = TaskSerializer(instance)
-        return Response(response_serializer.data)
+        return Response(TaskSerializer(instance).data)
 
     @action(methods=['get'], detail=False, url_path='done_tasks', serializer_class=TaskSerializer)
     def get_done_tasks(self, request):
-        done = Task.objects.filter(status='True')
-
-        return Response(TaskSerializer(done, many=True).data)
+        tasks = Task.objects.filter(done='True')
+        return Response(TaskSerializer(tasks, many=True).data)
 
     @action(methods=['get'], detail=False, url_path='my_tasks', serializer_class=TaskSerializer)
     def get_my_tasks(self, request):
-        author = self.request.user
-        my_task = Task.objects.filter(worker=author)
-
-        return Response(TaskSerializer(my_task, many=True).data)
+        tasks = Task.objects.filter(worker=self.request.user)
+        return Response(TaskSerializer(tasks, many=True).data)
 
     @action(methods=['post'], detail=False, url_path='add_25000_tasks', serializer_class=TaskSerializer)
     def crate_tasks(self, request):
@@ -99,20 +79,20 @@ class TaskViewSet(viewsets.ModelViewSet):
             new_task = Task.objects.create(
                 title=uuid.uuid4(),
                 body=uuid.uuid4(),
-                status=random.choice(mylist),
-                worker_id=random.randint(1, 3)
+                done=random.choice(mylist),
+                worker_id=User.objects.filter().order_by('?').first().id,
             )
             new_task.save()
 
-        return (new_task)
+        return Response("Task done!")
 
     @action(methods=['post'], detail=False, url_path='add_50000_logs', serializer_class=TimerSerializer)
     def crate_logs(self, request):
         i: int = 0
         for i in range(50000):
             new_log = TaskTimer.objects.create(
-                task_id=random.randint(1, 25000),
-                author_id=random.randint(1, 3),
+                task_id=Task.objects.filter().order_by('?').first().id,
+                author_id=User.objects.filter().order_by('?').first().id,
                 stop_time=timezone.now(),
                 time_final=timedelta(seconds=random.randint(60, 3600)),
 
@@ -120,7 +100,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             new_log.start_time = new_log.stop_time - new_log.time_final
             new_log.save()
 
-        return (new_log)
+        return Response("Task done!")
 
 
 class CommentViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
@@ -154,7 +134,6 @@ class TaskTimerViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
     serializer_class = TimerSerializer
     queryset = TaskTimer.objects.all()
     filter_backends = [SearchFilter, DjangoFilterBackend]
-    filterset_class = TaskTimerFilterSet
     permission_classes = [IsAuthenticated]
     parent_lookup_kwargs = {
         'task_pk': 'task__pk'
@@ -167,7 +146,6 @@ class TaskTimerViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
             author=self.request.user,
             start_time=timezone.now(),
         )
-
         return Response(TimerSerializer(instance).data)
 
     @action(methods=['post'], detail=False, url_path='stop_timer', serializer_class=TimerSerializer)
@@ -176,7 +154,6 @@ class TaskTimerViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
         instance.stop_time = timezone.now()
         instance.time_final = (instance.stop_time - instance.start_time)
         instance.save()
-
         return Response(TimerSerializer(instance).data)
 
     @action(methods=['post'], detail=False, url_path='log_time', serializer_class=TimerAddSerializer)

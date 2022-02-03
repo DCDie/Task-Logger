@@ -94,6 +94,10 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
         'rest_framework.filters.SearchFilter',
     ),
+    'DEFAULT_PAGINATION_CLASS': (
+        'apps.task.pagination.DefaultPaginator'
+    ),
+
 }
 
 MAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
